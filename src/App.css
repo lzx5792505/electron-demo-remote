@@ -1,0 +1,50 @@
+.icon-button{
+  border: none;
+  background: none;
+  color: inherit;
+}
+
+.file-inputs{
+  width: 83% !important;
+}
+
+.c-link{
+  cursor: pointer;
+}
+
+.h-60{
+  height: 60px;
+}
+
+.c-btn{
+  width: 100%;
+  border-radius:0rem !important;
+}
+
+.btn-check:focus+.btn-primary, .btn-primary:focus{
+  box-shadow: 0 0 0 0.05rem rgb(49 132 253 / 50%) !important;
+}
+
+.btn-check:focus+.btn, .btn:focus {
+  box-shadow: 0 0 0 0.05rem rgb(13 110 253 / 25%) !important;
+}
+
+.start-page{
+  font-size: 30px;
+  height: 180px;
+  line-height: 180px;
+  color: #ccc;
+  text-align: center;
+}
+
+.left-panel{
+  min-height: 100vh;
+  position: relative;
+}
+
+.button-group {
+  position: absolute;
+  width: 100%;
+  left: 0;
+  bottom: 0;
+}
