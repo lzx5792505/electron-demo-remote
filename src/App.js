@@ -12,9 +12,9 @@ import "easymde/dist/easymde.min.css";
 import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
 import defaultFiles from './utils/dataFiles';
 
-const app = window.require('@electron/remote').app
-const version = app.getVersion();
-console.log(version);
+// const app = window.require('@electron/remote').app
+// const version = app.getVersion();
+// console.log(version);
 
 function App() {
   const [files, setFiles ] =  useState(flattenArr(defaultFiles))
