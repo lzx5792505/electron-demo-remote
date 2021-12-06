@@ -3,13 +3,17 @@ const { app, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
 const path = require('path')
 
+let mainWindow
+
 function createWindow () {
   // 创建浏览器窗口
-  const mainWindow = new BrowserWindow({
+  mainWindow = new BrowserWindow({
     width: 1064,
     height: 600,
     webPreferences: {
-      nodeintegration:true,
+      nodeIntegration: true,
+      enableRemoteModule: true,
+      contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     }
   })
@@ -27,6 +31,10 @@ function createWindow () {
 // 部分 API 在 ready 事件触发后才能使用。
 app.whenReady().then(() => {
   createWindow()
+
+  // 使用remote
+  require('@electron/remote/main').initialize()
+  require('@electron/remote/main').enable(mainWindow.webContents)
 
   app.on('activate', function () {
     // 通常在 macOS 上，当点击 dock 中的应用程序图标时，如果没有其他
