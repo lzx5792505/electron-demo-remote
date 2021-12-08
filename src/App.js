@@ -9,11 +9,15 @@ import { flattenArr, objToArr } from './utils/helper'
 import uuidv4 from 'uuid/dist/v4'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { faPlus, faFileImport, faSave } from '@fortawesome/free-solid-svg-icons'
 import defaultFiles from './utils/dataFiles';
 
-const fs = window.require('fs')
-console.dir(fs);
+//node api
+import { writeFile, renameFile } from './utils/fileHelper'
+const { join } = window.require('path')
+const { app } = window.require('@electron/remote')
+//electron api
+
 
 function App() {
   const [files, setFiles ] =  useState(flattenArr(defaultFiles))
@@ -22,6 +26,7 @@ function App() {
   const [ unsavedFileIDs, setUnsavedFileIDs ] = useState([])
   const [ searchedFiles, setSearchedFiles ] = useState([])
   const filesArr = objToArr(files)
+  const savedLocation = app.getPath('documents')
 
   const openedFiles = opnedFileIDs.map(openID => {return files[openID]})
   const activeFile = files[activeFileID]
@@ -72,9 +77,17 @@ function App() {
     tabClose(id)
   }
 
-  const updateFileName = (id, title) => {
+  const updateFileName = (id, title, isNew) => {
     const modifFile = { ...files[id], title, isNew:false}
-    setFiles({ ...files, [id]:modifFile })
+    if( isNew ){
+      writeFile(join(savedLocation, `${title}.md`), files[id].body).then(() => {
+        setFiles({ ...files, [id]:modifFile })
+      })
+    } else {
+      renameFile(join(savedLocation, `${files[id].title}.md`), join(savedLocation, `${title}.md`)).then(() => {
+        setFiles({ ...files, [id]:modifFile })
+      })
+    }
   }
 
   const fileSearch = (keyword) => {
@@ -92,6 +105,12 @@ function App() {
       isNew:true
     }
     setFiles({ ...files, [newID]:newFiles})
+  }
+
+  const saveCurrentFile = () => {
+    writeFile(join(savedLocation, `${activeFile.title}.md`), activeFile.body).then(() => {
+      setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id))
+    })
   }
 
   return (
@@ -151,6 +170,12 @@ function App() {
                   lineNumbers:false,
                   minHeight:'388px'
                 }}
+              />
+              <BottomBtn
+                text="保存"
+                colorClass="btn-success"
+                icon={faSave}
+                onBtnClick={saveCurrentFile}
               />
             </>
           }
