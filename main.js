@@ -1,6 +1,7 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
 const { app, BrowserWindow } = require('electron')
 const isDev = require('electron-is-dev')
+const Store = require('electron-store')
 const path = require('path')
 
 let mainWindow
@@ -32,6 +33,9 @@ function createWindow () {
 app.whenReady().then(() => {
   createWindow()
 
+  // 初始化
+  Store.initRenderer()
+
   // 使用remote
   require('@electron/remote/main').initialize()
   require('@electron/remote/main').enable(mainWindow.webContents)
@@ -47,6 +51,7 @@ app.whenReady().then(() => {
 // 任务栏上的图标来说，应当保持活跃状态，直到用户使用 Cmd + Q 退出。
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
+  mainWindow = ''
 })
 
 // 在这个文件中，你可以包含应用程序剩余的所有部分的代码，

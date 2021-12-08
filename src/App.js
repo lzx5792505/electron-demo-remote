@@ -5,22 +5,39 @@ import FileSearch from './components/FileSearch';
 import FileList from './components/FileList';
 import BottomBtn from './components/BottomBtn';
 import TabList from './components/TabList';
-import { flattenArr, objToArr } from './utils/helper'
+// import { flattenArr, objToArr } from './utils/helper'
+import { objToArr } from './utils/helper'
 import uuidv4 from 'uuid/dist/v4'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import { faPlus, faFileImport, faSave } from '@fortawesome/free-solid-svg-icons'
-import defaultFiles from './utils/dataFiles';
+// import defaultFiles from './utils/dataFiles';
 
 //node api
 import { writeFile, renameFile } from './utils/fileHelper'
 const { join } = window.require('path')
-const { app } = window.require('@electron/remote')
 //electron api
-
+const { app } = window.require('@electron/remote')
+const Store = window.require('electron-store')
+//本地存储
+const fileStore = new Store({'name': 'Files Data'})
+const saveFilesToStore = (files) => {
+  const filesStoreObj = objToArr(files).reduce((result, file) => {
+    const {id, path, title, createdAt } = file
+    result[id] = {
+      id,
+      path,
+      title,
+      createdAt
+    }
+    return result
+  },{})
+  fileStore.set('files', filesStoreObj)
+} 
 
 function App() {
-  const [files, setFiles ] =  useState(flattenArr(defaultFiles))
+  // const [files, setFiles ] =  useState(flattenArr(defaultFiles))
+  const [files, setFiles ] =  useState(fileStore.get('files') || {})
   const [ activeFileID, setActiveFileID ] = useState('')
   const [ opnedFileIDs, setOpnedFileIDs ] = useState([])
   const [ unsavedFileIDs, setUnsavedFileIDs ] = useState([])
@@ -78,14 +95,19 @@ function App() {
   }
 
   const updateFileName = (id, title, isNew) => {
-    const modifFile = { ...files[id], title, isNew:false}
+    const newPath = join(savedLocation, `${title}.md`)
+    const modifFile = { ...files[id], title, isNew:false, path: newPath}
+    const newFiles = { ...files, [id]:modifFile }
     if( isNew ){
-      writeFile(join(savedLocation, `${title}.md`), files[id].body).then(() => {
-        setFiles({ ...files, [id]:modifFile })
+      writeFile(newPath, files[id].body).then(() => {
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
       })
     } else {
-      renameFile(join(savedLocation, `${files[id].title}.md`), join(savedLocation, `${title}.md`)).then(() => {
-        setFiles({ ...files, [id]:modifFile })
+      const oldPath = join(savedLocation, `${files[id].title}.md`)
+      renameFile(oldPath, newPath).then(() => {
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
       })
     }
   }
