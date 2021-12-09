@@ -1,10 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import  PropTypes  from 'prop-types';
 import useKeyPress from '../hooks/useKeyPress';
+import useContextMenu from '../hooks/useContextMenu';
+import { getParentNode } from '../utils/helper'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faEdit, faTrash, faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faMarkdown } from '@fortawesome/free-brands-svg-icons'
+
+//node.js mdules
+// const { Menu, MenuItem, getCurrentWindow } = window.require('@electron/remote')
 
 export default function FileList({ files, onFileClick, onSaveEdit, onFileDelete  }) {
     const [ editStatus, setEditStatus ] = useState(false)
@@ -39,7 +44,39 @@ export default function FileList({ files, onFileClick, onSaveEdit, onFileDelete 
             setValue(newFile.title)
         }
     },[files])
-    
+
+    const clickedItem =  useContextMenu([
+        {
+            label:'打开',
+            click:() => {
+                const parentElement = getParentNode(clickedItem.current, 'file-item')
+                if(parentElement){
+                    onFileClick(parentElement.dataset.id)
+                }
+            }
+        },
+        {
+            label:'重命名',
+            click:() => {
+                const parentElement = getParentNode(clickedItem.current, 'file-item')
+                if(parentElement){
+                    const { id, title } = parentElement.dataset
+                    setEditStatus(id)
+                    setValue(title)
+                }
+            }
+        },
+        {
+            label:'删除',
+            click:() => {
+                const parentElement = getParentNode(clickedItem.current, 'file-item')
+                if(parentElement){
+                    onFileDelete(parentElement.dataset.id)
+                }
+            }
+        }
+    ],'.file-list', [files])
+
     return (
         <ul className="list-group list-group-flush file-list">
             {
@@ -47,6 +84,8 @@ export default function FileList({ files, onFileClick, onSaveEdit, onFileDelete 
                     <li 
                         className="list-group-item bg-light row d-flex align-items-center file-item g-0"
                         key={file.id}
+                        data-id={file.id}
+                        data-title={file.title}
                     >
                         {
                             (file.id !== editStatus && !file.isNew) &&
@@ -63,7 +102,7 @@ export default function FileList({ files, onFileClick, onSaveEdit, onFileDelete 
                                 >
                                     { file.title }
                                 </span>
-                                <button
+                                {/* <button
                                     type="button"
                                     className="icon-button col-2"
                                     onClick={() => { setEditStatus(file.id);setValue(file.title) }}
@@ -82,7 +121,7 @@ export default function FileList({ files, onFileClick, onSaveEdit, onFileDelete 
                                         icon={faTrash}
                                         title="删除"
                                     />
-                                </button>
+                                </button> */}
                             </>
                         }
                         {
