@@ -5,7 +5,7 @@ import FileSearch from './components/FileSearch';
 import FileList from './components/FileList';
 import BottomBtn from './components/BottomBtn';
 import TabList from './components/TabList';
-import { objToArr } from './utils/helper'
+import { objToArr, flattenArr } from './utils/helper'
 import uuidv4 from 'uuid/dist/v4'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
@@ -13,9 +13,9 @@ import { faPlus, faFileImport, faSave } from '@fortawesome/free-solid-svg-icons'
 
 //node api
 import { writeFile, renameFile, delFile, readFile } from './utils/fileHelper'
-const { join } = window.require('path')
+const { join, basename, extname, dirname } = window.require('path')
 //electron api
-const { app } = window.require('@electron/remote')
+const { app, dialog } = window.require('@electron/remote')
 const Store = window.require('electron-store')
 //本地存储
 const fileStore = new Store({'name': 'Files Data'})
@@ -109,7 +109,10 @@ function App() {
   }
 
   const updateFileName = (id, title, isNew) => {
-    const newPath = join(savedLocation, `${title}.md`)
+    const newPath = isNew 
+    ? join(savedLocation, `${title}.md`)
+    :join(dirname(files[id].path), `${title}.md`)
+
     const modifFile = { ...files[id], title, isNew:false, path: newPath}
     const newFiles = { ...files, [id]:modifFile }
     if( isNew ){
@@ -118,7 +121,7 @@ function App() {
         saveFilesToStore(newFiles)
       })
     } else {
-      const oldPath = join(savedLocation, `${files[id].title}.md`)
+      const oldPath = files[id].path
       renameFile(oldPath, newPath).then(() => {
         setFiles(newFiles)
         saveFilesToStore(newFiles)
@@ -144,8 +147,47 @@ function App() {
   }
 
   const saveCurrentFile = () => {
-    writeFile(join(savedLocation, `${activeFile.title}.md`), activeFile.body).then(() => {
+    writeFile(activeFile.path, activeFile.body).then(() => {
       setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id))
+    })
+  }
+
+  const importFiles = () => {
+    dialog.showOpenDialog({
+      title:'选择导入的 Markdown 文件',
+      properties:[ 'openFile', 'multiSelections' ],
+      filters:[{ name:'Markdown files', extensions:['md'] }]
+    }).then(result => {
+      if(Array.isArray(result.filePaths)){
+        const filteredPaths = result.filePaths.filter(path => {
+          const alreadyyAdded = Object.values(files).find(file => {
+            return file.path === result.filePaths
+          })
+          return !alreadyyAdded
+        })
+
+        const importFilesArr = filteredPaths.map(path => {
+          return {
+            id:uuidv4(),
+            title:basename(path, extname(path)),
+            path
+          }
+        })
+
+        const newFiles = { ...files, ...flattenArr(importFilesArr)}
+
+        setFiles(newFiles)
+        saveFilesToStore(newFiles)
+        if(importFilesArr.length > 0){
+          dialog.showMessageBox({
+            type:'info',
+            title:`文件导入成功`,
+            message:`成功导入${importFilesArr.length}个文件`,
+          })
+        }
+      }
+    }).catch(err => {
+      console.log(err)
     })
   }
 
@@ -176,6 +218,7 @@ function App() {
                 text="导入"
                 colorClass="btn-success"
                 icon={faFileImport}
+                onBtnClick={importFiles}
               />
             </div>
           </div>
