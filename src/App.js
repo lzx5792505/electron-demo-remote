@@ -5,16 +5,14 @@ import FileSearch from './components/FileSearch';
 import FileList from './components/FileList';
 import BottomBtn from './components/BottomBtn';
 import TabList from './components/TabList';
-// import { flattenArr, objToArr } from './utils/helper'
 import { objToArr } from './utils/helper'
 import uuidv4 from 'uuid/dist/v4'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 import { faPlus, faFileImport, faSave } from '@fortawesome/free-solid-svg-icons'
-// import defaultFiles from './utils/dataFiles';
 
 //node api
-import { writeFile, renameFile } from './utils/fileHelper'
+import { writeFile, renameFile, delFile, readFile } from './utils/fileHelper'
 const { join } = window.require('path')
 //electron api
 const { app } = window.require('@electron/remote')
@@ -36,7 +34,6 @@ const saveFilesToStore = (files) => {
 } 
 
 function App() {
-  // const [files, setFiles ] =  useState(flattenArr(defaultFiles))
   const [files, setFiles ] =  useState(fileStore.get('files') || {})
   const [ activeFileID, setActiveFileID ] = useState('')
   const [ opnedFileIDs, setOpnedFileIDs ] = useState([])
@@ -51,6 +48,15 @@ function App() {
 
   const fileClick = (fileID) => {
     setActiveFileID(fileID)
+
+    const currentFile = files[fileID]
+    if(!currentFile.isLoaded){
+      readFile(currentFile.path).then(value => {
+        const newFile = { ...files[fileID], body: value, isLoaded: true}
+        setFiles({ ...files, [fileID]: newFile })
+      })
+    }
+
     if(!opnedFileIDs.includes(fileID)){
       setOpnedFileIDs([ ...opnedFileIDs, fileID ])
     }
@@ -89,9 +95,17 @@ function App() {
   }
 
   const deleteFile = (id) => {
-    delete files[id]
-    setFiles(files)
-    tabClose(id)
+    if(files[id].isNew){
+      const { [id]: value, ...afterDelete } = files
+      setFiles(afterDelete)
+    }else{
+      delFile(files[id].path).then(() => {
+        const { [id]: value, ...afterDelete } = files
+        setFiles(afterDelete)
+        saveFilesToStore(afterDelete)
+        tabClose(id)
+      })
+    }
   }
 
   const updateFileName = (id, title, isNew) => {

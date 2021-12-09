@@ -16,7 +16,7 @@ const renameFile = (oldPath, newPath) => {
   return fs.rename(oldPath, newPath);
 };
 
-const deleteFile = (filePath) => {
+const delFile = (filePath) => {
   return fs.rm(filePath);
 };
 
@@ -25,5 +25,5 @@ module.exports = {
   readFile,
   writeFile,
   renameFile,
-  deleteFile,
+  delFile,
 };

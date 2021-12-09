@@ -33,10 +33,10 @@ function createWindow () {
 app.whenReady().then(() => {
   createWindow()
 
-  // 初始化
+  // 初始化 electron-store
   Store.initRenderer()
 
-  // 使用remote
+  // 初始化 remote 
   require('@electron/remote/main').initialize()
   require('@electron/remote/main').enable(mainWindow.webContents)
 
