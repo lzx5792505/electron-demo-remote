@@ -5,11 +5,12 @@ import FileSearch from './components/FileSearch';
 import FileList from './components/FileList';
 import BottomBtn from './components/BottomBtn';
 import TabList from './components/TabList';
-import { objToArr, flattenArr } from './utils/helper'
+import useIpcRenderer from './hooks/useIpcRenderer'
 import uuidv4 from 'uuid/dist/v4'
+import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
+import { objToArr, flattenArr } from './utils/helper'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-import { faPlus, faFileImport, faSave } from '@fortawesome/free-solid-svg-icons'
 
 //node api
 import { writeFile, renameFile, delFile, readFile } from './utils/fileHelper'
@@ -82,9 +83,6 @@ function App() {
   }
 
   const fileChange = (id,value) => {
-    if (files[id].body === value) {
-      return;
-    }
     if(files[id].body !== value){
       const newFiles = { ...files[id], body: value}
       setFiles({ ...files, [id]: newFiles })
@@ -191,6 +189,12 @@ function App() {
     })
   }
 
+  useIpcRenderer({
+    'create-new-file':createNewFile,
+    'save-edit-file': saveCurrentFile,
+    'import-file':importFiles,
+  })
+
   return (
     <div className="App container-fluid px-0">
       <div className="row g-0">
@@ -249,12 +253,6 @@ function App() {
                   lineNumbers:false,
                   minHeight:'388px'
                 }}
-              />
-              <BottomBtn
-                text="保存"
-                colorClass="btn-success"
-                icon={faSave}
-                onBtnClick={saveCurrentFile}
               />
             </>
           }

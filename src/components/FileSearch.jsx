@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useRef } from 'react';
 import  PropTypes  from 'prop-types';
 import useKeyPress from '../hooks/useKeyPress';
-
+import useIpcRenderer from '../hooks/useIpcRenderer'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faSearch, faTimes } from '@fortawesome/free-solid-svg-icons'
 
@@ -10,13 +10,16 @@ export default function FileSearch({ title, onFileSearch }) {
     const [ value, setValue ] = useState('')
     const enterPressed = useKeyPress(13)
     const escPressed = useKeyPress(27)
-
     let nodes = useRef(null)
 
     const closeSearch = () => {
         onFileSearch('')
         setInputActive(false)
         setValue('')
+    }
+
+    const startSearch = () => {
+        setInputActive(true)
     }
 
     useEffect(() =>{
@@ -34,11 +37,9 @@ export default function FileSearch({ title, onFileSearch }) {
         }
     },[inputActive])
 
-    // useEffect(() => {
-    //     if(value.length === 0){
-    //         closeAll()
-    //     }
-    // },[value])
+    useIpcRenderer({
+        'search-file': startSearch
+    })
 
     return (
         <div className="alert alert-primary d-flex justify-content-between align-items-center h-60 mb-0">

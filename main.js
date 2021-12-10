@@ -1,8 +1,9 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
-const { app, BrowserWindow } = require('electron')
+const { app, BrowserWindow, Menu } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const path = require('path')
+const menuTemplate = require('./src/utils/menuTemplate')
 
 let mainWindow
 
@@ -39,6 +40,10 @@ app.whenReady().then(() => {
   // 初始化 remote 
   require('@electron/remote/main').initialize()
   require('@electron/remote/main').enable(mainWindow.webContents)
+
+  //设置菜单
+  const menu = Menu.buildFromTemplate(menuTemplate)
+  Menu.setApplicationMenu(menu)
 
   app.on('activate', function () {
     // 通常在 macOS 上，当点击 dock 中的应用程序图标时，如果没有其他
