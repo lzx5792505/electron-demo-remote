@@ -15,11 +15,15 @@ import "easymde/dist/easymde.min.css";
 //node api
 import { writeFile, renameFile, delFile, readFile } from './utils/fileHelper'
 const { join, basename, extname, dirname } = window.require('path')
+
 //electron api
 const { app, dialog } = window.require('@electron/remote')
 const Store = window.require('electron-store')
+
 //本地存储
 const fileStore = new Store({'name': 'Files Data'})
+const settingsStore = new Store({name: 'Settings'})
+
 const saveFilesToStore = (files) => {
   const filesStoreObj = objToArr(files).reduce((result, file) => {
     const {id, path, title, createdAt } = file
@@ -41,7 +45,7 @@ function App() {
   const [ unsavedFileIDs, setUnsavedFileIDs ] = useState([])
   const [ searchedFiles, setSearchedFiles ] = useState([])
   const filesArr = objToArr(files)
-  const savedLocation = app.getPath('documents')
+  const savedLocation = settingsStore.get('savedFileLocation') || app.getPath('documents')
 
   const openedFiles = opnedFileIDs.map(openID => {return files[openID]})
   const activeFile = files[activeFileID]
@@ -159,7 +163,7 @@ function App() {
       if(Array.isArray(result.filePaths)){
         const filteredPaths = result.filePaths.filter(path => {
           const alreadyyAdded = Object.values(files).find(file => {
-            return file.path === result.filePaths
+            return file.path === path
           })
           return !alreadyyAdded
         })

@@ -1,15 +1,16 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
-const { app, BrowserWindow, Menu } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const path = require('path')
 const menuTemplate = require('./src/utils/menuTemplate')
+const AppWindow = require('./src/AppWindow')
 
-let mainWindow
+let mainWindow, settingWindow
 
 function createWindow () {
   // 创建浏览器窗口
-  mainWindow = new BrowserWindow({
+  const mainWindowConfig = {
     width: 1064,
     height: 600,
     webPreferences: {
@@ -18,14 +19,39 @@ function createWindow () {
       contextIsolation: false,
       preload: path.join(__dirname, 'preload.js')
     }
+  }
+  // 初始化 remote 
+  require('@electron/remote/main').initialize()
+
+  // 加载URL
+  const urlLocation = isDev ? 'http://localhost:3000' : 'dummyurl'
+  mainWindow =  new AppWindow(mainWindowConfig, urlLocation)
+  
+  // 主界面使用remote
+  require('@electron/remote/main').enable(mainWindow.webContents)
+
+  mainWindow.on('closed',() => {
+    mainWindow = null
   })
 
-  const urlLocatio = isDev ? 'http://localhost:3000' : 'dummyurl';
-  // 加载URL
-  mainWindow.loadURL(urlLocatio)
+  ipcMain.on('open-setting-window', () => {
+    const settingWindowConfig = {
+      width: 500,
+      height: 400,
+      parent:mainWindow,
+      webPreferences: {
+        nodeIntegration: true,
+        enableRemoteModule: true,
+        contextIsolation: false,
+      }
+    }
 
-  // 打开开发工具
-  // mainWindow.webContents.openDevTools()
+    const settingLocation = `file://${path.join(__dirname, './settings/settings.html')}`
+    settingWindow = new AppWindow(settingWindowConfig, settingLocation)
+
+    // 子界面使用remote
+    require('@electron/remote/main').enable(settingWindow.webContents)
+  })
 }
 
 // 这段程序将会在 Electron 结束初始化
@@ -36,10 +62,6 @@ app.whenReady().then(() => {
 
   // 初始化 electron-store
   Store.initRenderer()
-
-  // 初始化 remote 
-  require('@electron/remote/main').initialize()
-  require('@electron/remote/main').enable(mainWindow.webContents)
 
   //设置菜单
   const menu = Menu.buildFromTemplate(menuTemplate)
@@ -56,7 +78,6 @@ app.whenReady().then(() => {
 // 任务栏上的图标来说，应当保持活跃状态，直到用户使用 Cmd + Q 退出。
 app.on('window-all-closed', function () {
   if (process.platform !== 'darwin') app.quit()
-  mainWindow = ''
 })
 
 // 在这个文件中，你可以包含应用程序剩余的所有部分的代码，

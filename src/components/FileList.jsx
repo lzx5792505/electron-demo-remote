@@ -5,7 +5,7 @@ import useContextMenu from '../hooks/useContextMenu';
 import { getParentNode } from '../utils/helper'
 
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
-import { faEdit, faTrash, faTimes } from '@fortawesome/free-solid-svg-icons'
+import { faTimes } from '@fortawesome/free-solid-svg-icons'
 import { faMarkdown } from '@fortawesome/free-brands-svg-icons'
 
 //node.js mdules
