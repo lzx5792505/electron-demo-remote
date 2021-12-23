@@ -1,4 +1,6 @@
 const qiniu = require('qiniu')
+const axios = require('axios')
+const fs = require('fs')
 
 class QiniuManager {
     constructor( accessKey, secretKey, bucket) {
@@ -46,6 +48,29 @@ class QiniuManager {
         const digToken = qiniu.util.generateAccessToken(this.mac, requURL)
         return new Promise((resolve, reject) => {
             qiniu.rpc.postWithoutForm(requURL, digToken, this.__handleCallback( resolve, reject ))
+        })
+    }
+
+    downloadFile(key, downloadPath) {
+        return this.getLocalDownPath(key).then(link => {
+            const timeStamp =  new Date().getTime()
+            const url = `${link}?timestamp=${timeStamp}`
+            return axios({
+                url,
+                method:'GET',
+                responseType:'stream',
+                headers:{'Cache-Control': 'no-cache'}
+
+            })
+        }).then(res => {
+            const writerURL = fs.createWriteStream(downloadPath)
+            res.data.pipe(writerURL)
+            return new Promise(( resolve, reject ) => {
+                writerURL.on('finish', resolve)
+                writerURL.on('error', reject)
+            })
+        }).catch( err => {
+            return Promise.reject({ err: err.response })
         })
     }
 
