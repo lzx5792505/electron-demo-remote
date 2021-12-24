@@ -1,11 +1,12 @@
 const { dialog, getCurrentWindow } = require('@electron/remote')
 const Store = require('electron-store')
 const settingsStore = new Store({name: 'Settings'})
+const qiniuConfigArr = ['#savedFileLocation', '#accessKey', '#secretKey', '#bucketName']
 
-
-function $(selector) {
-    return window.document.querySelector(selector);
-  }
+const $ = (selector) => {
+    const res = document.querySelectorAll(selector)
+    return res.length > 1 ? res : res[0]
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     let savedLocation = settingsStore.get('savedFileLocation')
@@ -13,21 +14,44 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#savedFileLocation').value = savedLocation
     }
 
+    qiniuConfigArr.forEach( selector => {
+        const savedValue = settingsStore.get(selector.substr(1))
+        if(savedValue){
+            $(selector).value = savedValue
+        }
+    })
+
     $('#selectNewLocation').addEventListener('click', () => {
         dialog.showOpenDialog({
             properties:['openDirectory'],
             message:'选择文件的存储路径'
         }).then(result => {
-            console.log(result.filePaths);
             if(Array.isArray(result.filePaths)){
                 $('#savedFileLocation').value = result.filePaths[0]
-                savedLocation = result.filePaths[0]
             }
         })
     })
 
-    $('#settings-form').addEventListener('submit', () => {
-        settingsStore.set('savedFileLocation', savedLocation)
+    $('#settings-form').addEventListener('submit', (e) => {
+        e.preventDefault()
+        qiniuConfigArr.forEach( selector => {
+            if($(selector)){
+                let {id, value} = $(selector)
+                settingsStore.set(id, value ? value : '')
+            }
+        })
         getCurrentWindow().close()
+    })
+
+    $('.nav-tabs').addEventListener('click', (e) => {
+        e.preventDefault()
+        $('.nav-link').forEach(element => {
+            element.classList.remove('active')
+        });
+        e.target.classList.add('active')
+        $('.config-area').forEach(e => {
+            e.style.display = 'none'
+        })
+        $(e.target.dataset.tab).style.display = 'block'
     })
 })

@@ -48,6 +48,10 @@ function createWindow () {
 
     const settingLocation = `file://${path.join(__dirname, './settings/settings.html')}`
     settingWindow = new AppWindow(settingWindowConfig, settingLocation)
+    settingWindow.removeMenu()
+    settingWindow.on('closed', () => {
+      settingWindow = null
+    })
 
     // 子界面使用remote
     require('@electron/remote/main').enable(settingWindow.webContents)
