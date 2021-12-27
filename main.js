@@ -1,12 +1,21 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
-const { app, BrowserWindow, Menu, ipcMain } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const path = require('path')
 const menuTemplate = require('./src/utils/menuTemplate')
 const AppWindow = require('./src/AppWindow')
+const settingsStore = new Store({ name: 'Settings' })
+const QiniuManager = require('./src/utils/QiniuManager')
 
 let mainWindow, settingWindow
+
+const createManager = () => {
+  const accessKey = settingsStore.get('accessKey')
+  const secretKey = settingsStore.get('secretKey')
+  const bucketName = settingsStore.get('bucketName')
+  return QiniuManager(accessKey, secretKey, bucketName)
+}
 
 function createWindow () {
   // 创建浏览器窗口
@@ -48,7 +57,7 @@ function createWindow () {
 
     const settingLocation = `file://${path.join(__dirname, './settings/settings.html')}`
     settingWindow = new AppWindow(settingWindowConfig, settingLocation)
-    settingWindow.removeMenu()
+    // settingWindow.removeMenu()
     settingWindow.on('closed', () => {
       settingWindow = null
     })
@@ -56,6 +65,7 @@ function createWindow () {
     // 子界面使用remote
     require('@electron/remote/main').enable(settingWindow.webContents)
   })
+
 }
 
 // 这段程序将会在 Electron 结束初始化
@@ -68,8 +78,33 @@ app.whenReady().then(() => {
   Store.initRenderer()
 
   //设置菜单
-  const menu = Menu.buildFromTemplate(menuTemplate)
+  let menu = Menu.buildFromTemplate(menuTemplate)
   Menu.setApplicationMenu(menu)
+
+  ipcMain.on('config-is-saved', () => {
+    //苹果 和  win 区别
+    let qiniuMenu = process.platform === 'darwin' ? menu.items[3] : menu.items[2]
+    const switchItems = (toggle) => {
+      [1,2,3].forEach(num => {
+        qiniuMenu.submenu.items[num].enabled =  toggle
+      })
+    }
+    const qiniuConfiged = ['accessKey', 'secretKey', 'bucketName'].every( key => !!settingsStore.get(key))
+    if(qiniuConfiged){
+      switchItems(true)
+    } else {
+      switchItems(false)
+    }
+  })
+
+  ipcMain.on('upload-file', ( event, data ) => {
+    const manager = createManager()
+    manager.uploadFile( data.key, data.path ).then( data => {
+      console.log('上传成功', data);
+    }).cctch( err => {
+      dialog.showErrorBox('同步失败','请检查七牛云参数是否正确')
+    })
+  })
 
   app.on('activate', function () {
     // 通常在 macOS 上，当点击 dock 中的应用程序图标时，如果没有其他

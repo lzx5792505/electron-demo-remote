@@ -11,18 +11,19 @@ import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
 import { objToArr, flattenArr } from './utils/helper'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
-
 //node api
 import { writeFile, renameFile, delFile, readFile } from './utils/fileHelper'
 const { join, basename, extname, dirname } = window.require('path')
-
 //electron api
 const { app, dialog } = window.require('@electron/remote')
+const { ipcRenderer } = window.require('electron')
 const Store = window.require('electron-store')
 
 //本地存储
 const fileStore = new Store({'name': 'Files Data'})
 const settingsStore = new Store({name: 'Settings'})
+
+const getAutoSync =  ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every( key => !!settingsStore.get(key))
 
 const saveFilesToStore = (files) => {
   const filesStoreObj = objToArr(files).reduce((result, file) => {
@@ -149,8 +150,12 @@ function App() {
   }
 
   const saveCurrentFile = () => {
-    writeFile(activeFile.path, activeFile.body).then(() => {
-      setUnsavedFileIDs(unsavedFileIDs.filter(id => id !== activeFile.id))
+    const { path, body, title, id } =  activeFile
+    writeFile(path, body).then(() => {
+      setUnsavedFileIDs(unsavedFileIDs.filter(ids => ids !== id))
+      if(getAutoSync){
+        ipcRenderer.send('upload-file', { key:`${title}.md`, path })
+      }
     })
   }
 

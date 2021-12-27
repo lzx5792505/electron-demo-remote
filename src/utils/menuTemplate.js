@@ -1,4 +1,8 @@
 const { app, shell, ipcMain } = require('electron')
+const Store =  require('electron-store')
+const settingsStore = new Store({ name: 'Settings' })
+const qiniuConfiged = ['accessKey', 'secretKey', 'bucketName'].every( key => !!settingsStore.get(key))
+let enableAutoSync = settingsStore.get('enableAutoSync')
 
 let template = [{
   label: '文件',
@@ -66,25 +70,25 @@ let template = [{
     label: '设置',
     accelerator: 'CmdOrCtrl+,',
     click: () => {
-      
+      ipcMain.emit('open-settings-window')
     }
   }, {
     label: '自动同步',
     type: 'checkbox',
-    enabled: '',
-    checked: '',
+    enabled: qiniuConfiged,
+    checked: enableAutoSync,
     click: () => {
-      
+      settingsStore.set('enableAutoSync', !enableAutoSync)
     }
   }, {
     label: '全部同步至云端',
-    enabled: '',
+    enabled: qiniuConfiged,
     click: () => {
       
     }
   }, {
     label: '从云端下载到本地',
-    enabled: '',
+    enabled: qiniuConfiged,
     click: () => {
       
     }
