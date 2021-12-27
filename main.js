@@ -6,6 +6,7 @@ const path = require('path')
 const menuTemplate = require('./src/utils/menuTemplate')
 const AppWindow = require('./src/AppWindow')
 const settingsStore = new Store({ name: 'Settings' })
+const fileStore = new Store({'name': 'Files Data'})
 const QiniuManager = require('./src/utils/QiniuManager')
 
 let mainWindow, settingWindow
@@ -99,11 +100,23 @@ app.whenReady().then(() => {
 
   ipcMain.on('upload-file', ( event, data ) => {
     const manager = createManager()
-    console.log(createManager());
     manager.uploadFile( data.key, data.path ).then( data => {
       mainWindow.webContents.send('active-file-uploaded')
     }).catch( err => {
       dialog.showErrorBox('同步失败','请检查七牛云参数是否正确')
+    })
+  })
+
+  ipcMain.on('download-file', ( event, data ) => {
+    const manager = createManager()
+    const filesObj = fileStore.get('files')
+    manager.getStat(data.key).then((resp) => {
+      console.log(filesObj[data.id],resp);
+    }, (err) => {
+      // console.log(err);
+      if(err.statusCode === 612){
+        mainWindow.webContents.send('file-downloaded', { status: 'no-file' })
+      }
     })
   })
 

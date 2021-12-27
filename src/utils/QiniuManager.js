@@ -51,6 +51,12 @@ class QiniuManager {
         })
     }
 
+    getStat(key) {
+      return new Promise((resolve, reject) => {
+          this.bucketManager.stat(this.bucket, key, this.__handleCallback( resolve, reject ))
+      })  
+    }
+
     downloadFile(key, downloadPath) {
         return this.getLocalDownPath(key).then(link => {
             const timeStamp =  new Date().getTime()

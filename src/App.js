@@ -23,7 +23,7 @@ const Store = window.require('electron-store')
 const fileStore = new Store({'name': 'Files Data'})
 const settingsStore = new Store({name: 'Settings'})
 
-const getAutoSync =  ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every( key => !!settingsStore.get(key))
+const getAutoSync = () => ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].every( key => !!settingsStore.get(key))
 
 const saveFilesToStore = (files) => {
   const filesStoreObj = objToArr(files).reduce((result, file) => {
@@ -58,11 +58,18 @@ function App() {
     setActiveFileID(fileID)
 
     const currentFile = files[fileID]
-    if(!currentFile.isLoaded){
-      readFile(currentFile.path).then(value => {
-        const newFile = { ...files[fileID], body: value, isLoaded: true}
-        setFiles({ ...files, [fileID]: newFile })
-      })
+    const { id, title, path, isLoaded } = currentFile
+
+    // console.log(currentFile,!isLoaded);
+    if(!isLoaded){
+      if(getAutoSync()){
+        ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
+      } else {
+        readFile(currentFile.path).then(value => {
+          const newFile = { ...files[fileID], body: value, isLoaded: true}
+          setFiles({ ...files, [fileID]: newFile })
+        })
+      }
     }
 
     if(!opnedFileIDs.includes(fileID)){
@@ -155,7 +162,7 @@ function App() {
     const { path, body, title, id } =  activeFile
     writeFile(path, body).then(() => {
       setUnsavedFileIDs(unsavedFileIDs.filter(ids => ids !== id))
-      if(getAutoSync){
+      if(getAutoSync()){
         ipcRenderer.send('upload-file', { key:`${title}.md`, path })
       }
     })
