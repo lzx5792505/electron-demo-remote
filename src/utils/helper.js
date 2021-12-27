@@ -21,3 +21,8 @@ export const getParentNode = ( node, parentClassName ) => {
 
     return false
 }
+
+export const timesToString = (time) => {
+    const date = new Date(time)
+    return date.toLocaleDateString() + '' + date.toLocaleTimeString()
+}

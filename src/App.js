@@ -8,7 +8,7 @@ import TabList from './components/TabList';
 import useIpcRenderer from './hooks/useIpcRenderer'
 import uuidv4 from 'uuid/dist/v4'
 import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
-import { objToArr, flattenArr } from './utils/helper'
+import { objToArr, flattenArr, timesToString } from './utils/helper'
 import SimpleMDE from "react-simplemde-editor";
 import "easymde/dist/easymde.min.css";
 //node api
@@ -27,12 +27,14 @@ const getAutoSync =  ['accessKey', 'secretKey', 'bucketName', 'enableAutoSync'].
 
 const saveFilesToStore = (files) => {
   const filesStoreObj = objToArr(files).reduce((result, file) => {
-    const {id, path, title, createdAt } = file
+    const {id, path, title, createdAt, isSynced, updatedAt } = file
     result[id] = {
       id,
       path,
       title,
-      createdAt
+      createdAt,
+      isSynced, 
+      updatedAt
     }
     return result
   },{})
@@ -198,10 +200,19 @@ function App() {
     })
   }
 
+  const activeFileUploaded = () => {
+    const { id } = activeFile
+    const modiFile = { ...files[id], isSynced: true, updatedAt: new Date().getTime() }
+    const newFiles = { ...files, [id]:modiFile }
+    setFiles(newFiles)
+    saveFilesToStore(newFiles)
+  }
+
   useIpcRenderer({
     'create-new-file':createNewFile,
     'save-edit-file': saveCurrentFile,
     'import-file':importFiles,
+    'active-file-uploaded': activeFileUploaded
   })
 
   return (
@@ -263,6 +274,10 @@ function App() {
                   minHeight:'388px'
                 }}
               />
+              {
+                activeFile.isSynced && 
+                <span className="sync-status">已同步，上次同步时间 {timesToString(activeFile.updatedAt)}</span>
+              }
             </>
           }
         </div>

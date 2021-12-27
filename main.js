@@ -14,7 +14,7 @@ const createManager = () => {
   const accessKey = settingsStore.get('accessKey')
   const secretKey = settingsStore.get('secretKey')
   const bucketName = settingsStore.get('bucketName')
-  return QiniuManager(accessKey, secretKey, bucketName)
+  return new QiniuManager(accessKey, secretKey, bucketName)
 }
 
 function createWindow () {
@@ -99,9 +99,10 @@ app.whenReady().then(() => {
 
   ipcMain.on('upload-file', ( event, data ) => {
     const manager = createManager()
+    console.log(createManager());
     manager.uploadFile( data.key, data.path ).then( data => {
-      console.log('上传成功', data);
-    }).cctch( err => {
+      mainWindow.webContents.send('active-file-uploaded')
+    }).catch( err => {
       dialog.showErrorBox('同步失败','请检查七牛云参数是否正确')
     })
   })
