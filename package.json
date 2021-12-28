@@ -19,6 +19,7 @@
     "cross-env": "^7.0.3",
     "easymde": "^2.15.0",
     "electron": "^16.0.1",
+    "electron-builder": "^22.14.5",
     "electron-is-dev": "^2.0.0",
     "electron-store": "^8.0.1",
     "eslint-plugin-react-hooks": "^4.3.0",
