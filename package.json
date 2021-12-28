@@ -80,7 +80,7 @@
   },
   "build": {
     "appId": "cloudDoc",
-    "productName": "云文档",
+    "productName": "七牛云文档",
     "copyright": "Copyright © 2022 ${author}",
     "files": [
       "build/**/*",
