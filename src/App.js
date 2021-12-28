@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css'
-import FileSearch from './components/FileSearch';
-import FileList from './components/FileList';
-import BottomBtn from './components/BottomBtn';
-import TabList from './components/TabList';
+import FileSearch from './components/FileSearch'
+import FileList from './components/FileList'
+import BottomBtn from './components/BottomBtn'
+import TabList from './components/TabList'
+import Loader from './components/Loader'
 import useIpcRenderer from './hooks/useIpcRenderer'
 import uuidv4 from 'uuid/dist/v4'
 import { faPlus, faFileImport } from '@fortawesome/free-solid-svg-icons'
@@ -47,6 +48,7 @@ function App() {
   const [ opnedFileIDs, setOpnedFileIDs ] = useState([])
   const [ unsavedFileIDs, setUnsavedFileIDs ] = useState([])
   const [ searchedFiles, setSearchedFiles ] = useState([])
+  const [ isLoading, setLoading ] = useState(false)
   const filesArr = objToArr(files)
   const savedLocation = settingsStore.get('savedFileLocation') || app.getPath('documents')
 
@@ -60,7 +62,6 @@ function App() {
     const currentFile = files[fileID]
     const { id, title, path, isLoaded } = currentFile
 
-    // console.log(currentFile,!isLoaded);
     if(!isLoaded){
       if(getAutoSync()){
         ipcRenderer.send('download-file', { key: `${title}.md`, path, id })
@@ -215,15 +216,53 @@ function App() {
     saveFilesToStore(newFiles)
   }
 
+  const activeFileDownLoad = (event, msg) => {
+    const currFile = files[msg.id]
+    const { id, path } = currFile
+    readFile(path).then(value => {
+      let newFile
+      if(msg.status === 'dowbload-success'){
+        newFile = { ...files[id], body: value, isLoaded: true, isSynced: true, updatedAt: new Date().getTime() }
+      } else {
+        newFile = { ...files[id], body: value, isLoaded: true }
+      }
+      const downFiles = { ...files, [id]: newFile }
+      console.log(downFiles);
+      setFiles(downFiles)
+      saveFilesToStore(downFiles)
+    })
+  }
+
+  const filesUploaded = () => {
+    const currentFiles = objToArr(files).reduce((result, file) => {
+      const currentTime = new Date().getTime()
+      result[file.id] = {
+        ...files[file.id],
+        isSynced:true,
+        updatedAt:currentTime
+      }
+      return result
+    },{})
+    setFiles(currentFiles)
+    saveFilesToStore(currentFiles)
+  }
+
   useIpcRenderer({
     'create-new-file':createNewFile,
     'save-edit-file': saveCurrentFile,
     'import-file':importFiles,
-    'active-file-uploaded': activeFileUploaded
+    'active-file-uploaded': activeFileUploaded,
+    'file-dowbloaded':activeFileDownLoad,
+    'files-uploaded': filesUploaded,
+    'loading-status': (msg, status) => { setLoading(status) }
   })
 
   return (
     <div className="App container-fluid px-0">
+      {
+        isLoading &&
+        <Loader/>
+      }
       <div className="row g-0">
         <div className="col-3 left-panel">
           <FileSearch 

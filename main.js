@@ -1,5 +1,5 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
-const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog, ipcRenderer } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
 const path = require('path')
@@ -110,13 +110,44 @@ app.whenReady().then(() => {
   ipcMain.on('download-file', ( event, data ) => {
     const manager = createManager()
     const filesObj = fileStore.get('files')
-    manager.getStat(data.key).then((resp) => {
-      console.log(filesObj[data.id],resp);
-    }, (err) => {
-      // console.log(err);
-      if(err.statusCode === 612){
-        mainWindow.webContents.send('file-downloaded', { status: 'no-file' })
+    const { key, path, id } = data
+    manager.getStat(key).then((resp) => {
+      const serverUpdateTime = Math.round( resp.putTime / 10000 )
+      const loaclUpdateTime = filesObj[id].updatedAt
+      if(serverUpdateTime > loaclUpdateTime || !loaclUpdateTime){
+        manager.downloadFile(key, path).then(() => {
+          mainWindow.webContents.send('file-dowbloaded', { status: 'dowbload-success', id})
+        })
+      }else{
+        mainWindow.webContents.send('file-dowbloaded', { status: 'no-now-file', id})
       }
+    }, (err) => {
+      if(err.statusCode === 612){
+        mainWindow.webContents.send('file-dowbloaded', { status: 'no-file', id })
+      }
+    })
+  })
+
+  ipcMain.on('upload-all-to-qiniu', () => {
+    mainWindow.webContents.send('loading-status', true)
+    const manager = createManager()
+    const filesObj = fileStore.get('files') || {}
+    const uploadArr = Object.keys(filesObj).map(key => {
+      const file = filesObj[key]
+      return manager.uploadFile( `${file.title}`, file.path )
+    })
+    Promise.all(uploadArr).then(res => {
+      console.log(res);
+      dialog.showMessageBox({
+        type:'info',
+        title:`成功上传了 ${res.length} 个文件`,
+        message:`成功上传了 ${res.length} 个文件`,
+      })
+      mainWindow.webContents.send('files-uploaded')
+    }).catch( err => {
+      dialog.showErrorBox('同步失败','请检查七牛云参数是否正确')
+    }).finally(() => {
+      mainWindow.webContents.send('loading-status', false)
     })
   })
 
