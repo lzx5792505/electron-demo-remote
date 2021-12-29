@@ -51,7 +51,7 @@
     "dist": "electron-builder",
     "prepack": "yarn run buildElec && yarn run buildMain",
     "predist": "yarn run buildElec && yarn run buildMain",
-    "release": "cross-env GH_TOKEN=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 electron-builder",
+    "release": "cross-env GH_TOKEN= electron-builder",
     "prerelease": "yarn run buildElec && yarn run buildMain"
   },
   "eslintConfig": {
