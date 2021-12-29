@@ -1,6 +1,6 @@
 {
   "name": "demo",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "main": "main.js",
   "private": true,
   "dependencies": {
@@ -96,6 +96,7 @@
     "extraMetadata": {
       "main": "./build/main.js"
     },
+    "publish": ["github"],
     "extends": null,
     "directories": {
       "buildResources": "assets"
