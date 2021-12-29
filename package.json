@@ -79,15 +79,15 @@
     ]
   },
   "homepage": "./",
-  "description": "个人七牛云文档",
+  "description": "cloud document",
   "author": {
-    "name": "乐至心中起",
+    "name": "lezhixinzhongqi",
     "email": "375159680@qq.com",
     "repository": ""
   },
   "build": {
     "appId": "cloudDoc",
-    "productName": "七牛云文档",
+    "productName": "cloud document",
     "copyright": "Copyright © 2022 ${author}",
     "files": [
       "build/**/*",
