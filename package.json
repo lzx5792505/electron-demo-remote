@@ -142,7 +142,7 @@
       ],
       "icon": "assets/icon.ico",
       "artifactName": "${productName}-Web-Setup-${version}.${ext}",
-      "publisherName": "乐至心中起"
+      "publisherName": "L-iu"
     },
     "nsis": {
       "allowToChangeInstallationDirectory": true,
