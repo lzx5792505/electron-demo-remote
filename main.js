@@ -2,6 +2,7 @@
 const { app, BrowserWindow, Menu, ipcMain, dialog, ipcRenderer } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
+const autoUpdate = require('electron-updater')
 const path = require('path')
 const menuTemplate = require('./src/utils/menuTemplate')
 const AppWindow = require('./src/AppWindow')
@@ -73,6 +74,57 @@ function createWindow () {
 // 和创建浏览器窗口的时候调用
 // 部分 API 在 ready 事件触发后才能使用。
 app.whenReady().then(() => {
+  //自动更新
+  if(isDev){
+    autoUpdate.updateConfigPath = path.join(__dirname, 'dev-app-update.yml')
+  }
+  autoUpdate.autoDownload = false
+  autoUpdate.checkForUpdates()
+  autoUpdate.on('error', (error) => {
+    dialog.showErrorBox('Error: ', error == null ? 'unknown' : ( error.statusCode))
+  })
+  autoUpdate.on('checking-for-update', () => {
+    dialog.showMessageBox({
+      title: 'Checking for update...',
+      message: 'Checking for update...',
+    })
+  })
+  autoUpdate.on('update-available', () => {
+    dialog.showMessageBox({
+      type: 'info',
+      title: '应用有新版本',
+      message: '发现新版本， 是否现在更新?',
+      buttons: ['是', '否']
+    }, (index) => {
+      if( index === 0 ){
+        autoUpdate.downloadUpdate()
+      }
+    })
+  })
+  autoUpdate.on('download-progress', (progressObj) => {
+    let log_message = "Download speed: " + progressObj.bytesPerSecond;
+    log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
+    log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
+    dialog.showMessageBox({
+      title: log_message,
+      message: log_message,
+    })
+  })
+  autoUpdate.on('update-downloaded', (info) => {
+    dialog.showMessageBox({
+      title: '安装更新',
+      message: '更新完毕，应用将重启并进行更新'
+    }, () => {
+      setImmediate(() => autoUpdate.quitAndInstall())
+    })
+  });
+  autoUpdate.on('update-no-available', () => {
+    dialog.showMessageBox({
+      title: '没有新版本',
+      message: '当前已是新版本',
+    })
+  })
+
   createWindow()
 
   // 初始化 electron-store
