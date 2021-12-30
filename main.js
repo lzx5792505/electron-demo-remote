@@ -75,6 +75,16 @@ function createWindow () {
 // 和创建浏览器窗口的时候调用
 // 部分 API 在 ready 事件触发后才能使用。
 app.whenReady().then(() => {
+
+  createWindow()
+
+  // 初始化 electron-store
+  Store.initRenderer()
+
+  //设置菜单
+  let menu = Menu.buildFromTemplate(menuTemplate)
+  Menu.setApplicationMenu(menu)
+
   //自动更新
   if(isDev){
     autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml')
@@ -125,15 +135,6 @@ app.whenReady().then(() => {
       setImmediate(() => autoUpdater.quitAndInstall())
     })
   });
-
-  createWindow()
-
-  // 初始化 electron-store
-  Store.initRenderer()
-
-  //设置菜单
-  let menu = Menu.buildFromTemplate(menuTemplate)
-  Menu.setApplicationMenu(menu)
 
   ipcMain.on('config-is-saved', () => {
     //苹果 和  win 区别
