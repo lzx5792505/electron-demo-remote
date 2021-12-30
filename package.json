@@ -1,6 +1,6 @@
 {
   "name": "liudoc",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "main": "main.js",
   "private": true,
   "dependencies": {
@@ -99,7 +99,12 @@
     "extraMetadata": {
       "main": "./build/main.js"
     },
-    "publish": ["github"],
+    "publish": [{
+      "provider": "github",
+      "owner": "lzx5792505",
+      "repo": "electron-demo-remote",
+      "releaseType": "release"
+    }],
     "extends": null,
     "directories": {
       "buildResources": "assets"
