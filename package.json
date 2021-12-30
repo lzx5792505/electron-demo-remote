@@ -84,7 +84,7 @@
   "author": {
     "name": "liuDoc",
     "email": "375159680@qq.com",
-    "repository": ""
+    "repository": "liuDoc"
   },
   "build": {
     "appId": "cloudDoc",
@@ -99,12 +99,7 @@
     "extraMetadata": {
       "main": "./build/main.js"
     },
-    "publish": [{
-      "provider": "github",
-      "owner": "lzx5792505",
-      "repo": "electron-demo-remote",
-      "releaseType": "release"
-    }],
+    "publish": ["github"],
     "extends": null,
     "directories": {
       "buildResources": "assets"

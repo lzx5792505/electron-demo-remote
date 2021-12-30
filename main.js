@@ -1,8 +1,8 @@
 // 控制应用生命周期和创建原生浏览器窗口的模组
-const { app, BrowserWindow, Menu, ipcMain, dialog, ipcRenderer } = require('electron')
+const { app, BrowserWindow, Menu, ipcMain, dialog } = require('electron')
 const isDev = require('electron-is-dev')
 const Store = require('electron-store')
-const autoUpdate = require('electron-updater')
+const { autoUpdater } = require('electron-updater')
 const path = require('path')
 const menuTemplate = require('./src/utils/menuTemplate')
 const AppWindow = require('./src/AppWindow')
@@ -76,20 +76,20 @@ function createWindow () {
 app.whenReady().then(() => {
   //自动更新
   if(isDev){
-    autoUpdate.updateConfigPath = path.join(__dirname, 'dev-app-update.yml')
+    autoUpdater.updateConfigPath = path.join(__dirname, 'dev-app-update.yml')
   }
-  autoUpdate.autoDownload = false
-  autoUpdate.checkForUpdates()
-  autoUpdate.on('error', (error) => {
+  autoUpdater.autoDownload = false
+  autoUpdater.checkForUpdates()
+  autoUpdater.on('error', (error) => {
     dialog.showErrorBox('Error: ', error == null ? 'unknown' : ( error.statusCode))
   })
-  autoUpdate.on('checking-for-update', () => {
+  autoUpdater.on('checking-for-update', () => {
     dialog.showMessageBox({
       title: 'Checking for update...',
       message: 'Checking for update...',
     })
   })
-  autoUpdate.on('update-available', () => {
+  autoUpdater.on('update-available', () => {
     dialog.showMessageBox({
       type: 'info',
       title: '应用有新版本',
@@ -97,11 +97,17 @@ app.whenReady().then(() => {
       buttons: ['是', '否']
     }, (index) => {
       if( index === 0 ){
-        autoUpdate.downloadUpdate()
+        autoUpdater.downloadUpdate()
       }
     })
   })
-  autoUpdate.on('download-progress', (progressObj) => {
+  autoUpdater.on('update-not-available', () => {
+    dialog.showMessageBox({
+      title: '没有新版本',
+      message: '当前已是新版本',
+    })
+  })
+  autoUpdater.on('download-progress', (progressObj) => {
     let log_message = "Download speed: " + progressObj.bytesPerSecond;
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
     log_message = log_message + ' (' + progressObj.transferred + "/" + progressObj.total + ')';
@@ -110,20 +116,14 @@ app.whenReady().then(() => {
       message: log_message,
     })
   })
-  autoUpdate.on('update-downloaded', (info) => {
+  autoUpdater.on('update-downloaded', (info) => {
     dialog.showMessageBox({
       title: '安装更新',
       message: '更新完毕，应用将重启并进行更新'
     }, () => {
-      setImmediate(() => autoUpdate.quitAndInstall())
+      setImmediate(() => autoUpdater.quitAndInstall())
     })
   });
-  autoUpdate.on('update-no-available', () => {
-    dialog.showMessageBox({
-      title: '没有新版本',
-      message: '当前已是新版本',
-    })
-  })
 
   createWindow()
 
