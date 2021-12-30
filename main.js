@@ -24,6 +24,7 @@ function createWindow () {
   const mainWindowConfig = {
     width: 1064,
     height: 600,
+    icon : path.join(__dirname,'./assets/icon.ico'),
     webPreferences: {
       nodeIntegration: true,
       enableRemoteModule: true,
