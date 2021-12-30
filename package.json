@@ -1,6 +1,6 @@
 {
-  "name": "demo",
-  "version": "1.0.1",
+  "name": "liudoc",
+  "version": "1.0.2",
   "main": "main.js",
   "private": true,
   "dependencies": {
@@ -80,15 +80,15 @@
     ]
   },
   "homepage": "./",
-  "description": "cloud document",
+  "description": "liuDoc",
   "author": {
-    "name": "lezhixinzhongqi",
+    "name": "liuDoc",
     "email": "375159680@qq.com",
     "repository": ""
   },
   "build": {
     "appId": "cloudDoc",
-    "productName": "cloud document",
+    "productName": "liuDoc",
     "copyright": "Copyright © 2022 ${author}",
     "files": [
       "build/**/*",
@@ -142,7 +142,7 @@
       ],
       "icon": "assets/icon.ico",
       "artifactName": "${productName}-Web-Setup-${version}.${ext}",
-      "publisherName": "L-iu"
+      "publisherName": "liu"
     },
     "nsis": {
       "allowToChangeInstallationDirectory": true,
