@@ -1,6 +1,6 @@
 {
-  "name": "liudoc",
-  "version": "1.0.3",
+  "name": "clouddocument",
+  "version": "1.0.0",
   "main": "main.js",
   "private": true,
   "dependencies": {
@@ -142,7 +142,7 @@
       ],
       "icon": "assets/icon.ico",
       "artifactName": "${productName}-Web-Setup-${version}.${ext}",
-      "publisherName": "liu"
+      "publisherName": "liuDoc"
     },
     "nsis": {
       "allowToChangeInstallationDirectory": true,
