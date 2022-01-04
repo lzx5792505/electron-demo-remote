@@ -112,12 +112,12 @@ app.whenReady().then(() => {
       }
     })
   })
-  autoUpdater.on('update-not-available', () => {
-    dialog.showMessageBox({
-      title: '没有新版本',
-      message: '当前已是新版本',
-    })
-  })
+  // autoUpdater.on('update-not-available', () => {
+  //   dialog.showMessageBox({
+  //     title: '没有新版本',
+  //     message: '当前已是新版本',
+  //   })
+  // })
   autoUpdater.on('download-progress', (progressObj) => {
     let log_message = "Download speed: " + progressObj.bytesPerSecond;
     log_message = log_message + ' - Downloaded ' + progressObj.percent + '%';
